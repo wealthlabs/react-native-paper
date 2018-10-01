@@ -23,6 +23,22 @@ const LABEL_WIGGLE_X_OFFSET = 4;
 const FOCUS_ANIMATION_DURATION = 150;
 const BLUR_ANIMATION_DURATION = 180;
 
+type RenderProps = {
+  ref: NativeTextInput => void,
+  onChangeText: string => void,
+  placeholder: ?string,
+  placeholderTextColor: string,
+  editable?: boolean,
+  selectionColor: string,
+  onFocus: () => mixed,
+  onBlur: () => mixed,
+  underlineColorAndroid: string,
+  style: any,
+  multiline?: boolean,
+  numberOfLines?: number,
+  value?: string,
+};
+
 type Props = {
   /**
    * If true, user won't be able to interact with the component.
@@ -77,6 +93,7 @@ type Props = {
    * @optional
    */
   theme: Theme,
+  render: (props, RenderProps) => React.Node,
 };
 
 type State = {
@@ -134,6 +151,7 @@ class TextInput extends React.Component<Props, State> {
     disabled: false,
     error: false,
     multiline: false,
+    render: props => <NativeTextInput {...props} />,
   };
 
   static getDerivedStateFromProps(nextProps, prevState) {
@@ -351,6 +369,7 @@ class TextInput extends React.Component<Props, State> {
       underlineColor,
       style,
       theme,
+      render,
       ...rest
     } = this.props;
 
@@ -419,20 +438,20 @@ class TextInput extends React.Component<Props, State> {
         >
           {label}
         </AnimatedText>
-        <NativeTextInput
-          {...rest}
-          ref={c => {
+        {render({
+          ...rest,
+          ref: c => {
             this._root = c;
-          }}
-          onChangeText={this._handleChangeText}
-          placeholder={label ? this.state.placeholder : this.props.placeholder}
-          placeholderTextColor={colors.placeholder}
-          editable={!disabled}
-          selectionColor={selectionColor || colors.primary}
-          onFocus={this._handleFocus}
-          onBlur={this._handleBlur}
-          underlineColorAndroid="transparent"
-          style={[
+          },
+          onChangeText: this._handleChangeText,
+          placeholder: label ? this.state.placeholder : this.props.placeholder,
+          placeholderTextColor: colors.placeholder,
+          editable: !disabled,
+          selectionColor: selectionColor || colors.primary,
+          onFocus: this._handleFocus,
+          onBlur: this._handleBlur,
+          underlineColorAndroid: 'transparent',
+          style: [
             styles.input,
             label ? styles.inputWithLabel : styles.inputWithoutLabel,
             rest.multiline
@@ -444,8 +463,8 @@ class TextInput extends React.Component<Props, State> {
               color: inputTextColor,
               fontFamily,
             },
-          ]}
-        />
+          ],
+        })}
         <View pointerEvents="none" style={styles.bottomLineContainer}>
           <View
             style={[
