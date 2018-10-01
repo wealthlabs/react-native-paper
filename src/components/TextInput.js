@@ -93,7 +93,7 @@ type Props = {
    * @optional
    */
   theme: Theme,
-  render: (props, RenderProps) => React.Node,
+  render: (props: RenderProps) => React.Node,
 };
 
 type State = {
