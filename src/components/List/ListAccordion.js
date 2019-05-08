@@ -6,7 +6,7 @@ import { View, StyleSheet } from 'react-native';
 import TouchableRipple from '../TouchableRipple';
 import Icon from '../Icon';
 import Text from '../Typography/Text';
-import withTheme from '../../core/withTheme';
+import { withTheme } from '../../core/theming';
 import type { Theme } from '../../types';
 
 type Props = {
@@ -19,15 +19,23 @@ type Props = {
    */
   description?: React.Node,
   /**
-   * Icon to display for the `ListAccordion`.
+   * Callback which returns a React element to display on the left side.
    */
-  icon?: React.Node,
-
+  left?: (props: { color: string }) => React.Node,
+  /**
+   * Whether the accordion is expanded
+   * If this prop is provided, the accordion will behave as a "controlled component".
+   * You'll need to update this prop when you want to toggle the component or on `onPress`.
+   */
+  expanded?: boolean,
+  /**
+   * Function to execute on press.
+   */
+  onPress?: () => mixed,
   /**
    * Content of the section.
    */
   children: React.Node,
-
   /**
    * @optional
    */
@@ -40,7 +48,7 @@ type State = {
 };
 
 /**
- * `ListAccordion` can be used to display an expandable list item.
+ * A component used to display an expandable list item.
  *
  * <div class="screenshots">
  *   <img class="medium" src="screenshots/list-accordion-1.png" />
@@ -51,31 +59,67 @@ type State = {
  * ## Usage
  * ```js
  * import * as React from 'react';
- * import { ListAccordion, ListItem, Checkbox } from 'react-native-paper';
+ * import { List, Checkbox } from 'react-native-paper';
  *
- * const MyComponent = () => (
- *   <ListAccordion
- *     title="Accordion"
- *     icon="folder"
- *   >
- *     <ListItem title="First item" />
- *     <ListItem title="Second item" />
- *   </ListAccordion>
- * );
+ * class MyComponent extends React.Component {
+ *   state = {
+ *     expanded: true
+ *   }
+ *
+ *   _handlePress = () =>
+ *     this.setState({
+ *       expanded: !this.state.expanded
+ *     });
+ *
+ *   render() {
+ *     return (
+ *       <List.Section title="Accordions">
+ *         <List.Accordion
+ *           title="Uncontrolled Accordion"
+ *           left={props => <List.Icon {...props} icon="folder" />}
+ *         >
+ *           <List.Item title="First item" />
+ *           <List.Item title="Second item" />
+ *         </List.Accordion>
+ *
+ *         <List.Accordion
+ *           title="Controlled Accordion"
+ *           left={props => <List.Icon {...props} icon="folder" />}
+ *           expanded={this.state.expanded}
+ *           onPress={this._handlePress}
+ *         >
+ *           <List.Item title="First item" />
+ *           <List.Item title="Second item" />
+ *         </List.Accordion>
+ *       </List.Section>
+ *     );
+ *   }
+ * }
+ *
+ * export default MyComponent;
  * ```
  */
 class ListAccordion extends React.Component<Props, State> {
+  static displayName = 'List.Accordion';
+
   state = {
-    expanded: false,
+    expanded: this.props.expanded || false,
   };
 
-  _handlePress = () =>
-    this.setState(state => ({
-      expanded: !state.expanded,
-    }));
+  _handlePress = () => {
+    this.props.onPress && this.props.onPress();
+
+    if (this.props.expanded === undefined) {
+      // Only update state of the `expanded` prop was not passed
+      // If it was passed, the component will act as a controlled component
+      this.setState(state => ({
+        expanded: !state.expanded,
+      }));
+    }
+  };
 
   render() {
-    const { icon, title, description, children, theme, style } = this.props;
+    const { left, title, description, children, theme, style } = this.props;
     const titleColor = color(theme.colors.text)
       .alpha(0.87)
       .rgb()
@@ -85,41 +129,33 @@ class ListAccordion extends React.Component<Props, State> {
       .rgb()
       .string();
 
+    const expanded =
+      this.props.expanded !== undefined
+        ? this.props.expanded
+        : this.state.expanded;
+
     return (
       <View>
         <TouchableRipple
           style={[styles.container, style]}
           onPress={this._handlePress}
+          accessibilityTraits="button"
+          accessibilityComponentType="button"
+          accessibilityRole="button"
         >
           <View style={styles.row} pointerEvents="none">
-            {icon ? (
-              <View
-                style={[
-                  styles.item,
-                  styles.icon,
-                  description && styles.multiline,
-                ]}
-              >
-                <Icon
-                  name={icon}
-                  size={24}
-                  color={
-                    this.state.expanded
-                      ? theme.colors.primary
-                      : descriptionColor
-                  }
-                />
-              </View>
-            ) : null}
+            {left
+              ? left({
+                  color: expanded ? theme.colors.primary : descriptionColor,
+                })
+              : null}
             <View style={[styles.item, styles.content]}>
               <Text
                 numberOfLines={1}
                 style={[
                   styles.title,
                   {
-                    color: this.state.expanded
-                      ? theme.colors.primary
-                      : titleColor,
+                    color: expanded ? theme.colors.primary : titleColor,
                   },
                 ]}
               >
@@ -141,24 +177,20 @@ class ListAccordion extends React.Component<Props, State> {
             </View>
             <View style={[styles.item, description && styles.multiline]}>
               <Icon
-                name={
-                  this.state.expanded
-                    ? 'keyboard-arrow-up'
-                    : 'keyboard-arrow-down'
-                }
+                source={expanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
                 color={titleColor}
                 size={24}
               />
             </View>
           </View>
         </TouchableRipple>
-        {this.state.expanded
+        {expanded
           ? React.Children.map(children, child => {
               if (
-                icon &&
+                left &&
                 React.isValidElement(child) &&
-                !child.props.icon &&
-                !child.props.avatar
+                !child.props.left &&
+                !child.props.right
               ) {
                 return React.cloneElement(child, {
                   style: [styles.child, child.props.style],
@@ -179,9 +211,6 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-  },
-  icon: {
-    width: 40,
   },
   multiline: {
     height: 40,
