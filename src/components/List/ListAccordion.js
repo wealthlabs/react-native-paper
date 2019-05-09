@@ -63,30 +63,23 @@ type State = {
  * import { ListAccordion, ListItem, Checkbox } from 'react-native-paper';
  *
  * const MyComponent = () => (
-*   state = {
-*     expanded: true
-*   }
-*
-*   _handlePress = () =>
-*     this.setState({
-*       expanded: !this.state.expanded
-*     });
-*
- *   <ListAccordion
- *     title="Accordion"
- *     icon="folder"
- *   >
- *     <ListItem title="First item" />
- *     <ListItem title="Second item" />
- *   </ListAccordion>
+ *   state = {
+ *      expanded: true
+ *   }
+ *
+ *  _handlePress = () =>
+ *    this.setState({
+ *      expanded: !this.state.expanded
+ *    });
+ *
  *   <ListAccordion
  *      title="Accordion"
  *      icon="folder"
  *      expanded={this.state.expanded}
  *      onPress={this._handlePress}
  *   >
- *     <ListItem title="First item" />
- *     <ListItem title="Second item" />
+ *      <ListItem title="First item" />
+ *      <ListItem title="Second item" />
  *   </ListAccordion>
  * );
  * ```
