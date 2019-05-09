@@ -24,10 +24,19 @@ type Props = {
   icon?: React.Node,
 
   /**
+   * Whether the accordion is expanded
+   * If this prop is provided, the accordion will behave as a "controlled component".
+   * You'll need to update this prop when you want to toggle the component or on `onPress`.
+   */
+  expanded?: boolean,
+  /**
+   * Function to execute on press.
+   */
+  onPress?: () => mixed,
+  /**
    * Content of the section.
    */
   children: React.Node,
-
   /**
    * @optional
    */
@@ -40,7 +49,7 @@ type State = {
 };
 
 /**
- * `ListAccordion` can be used to display an expandable list item.
+ * A component used to display an expandable list item.
  *
  * <div class="screenshots">
  *   <img class="medium" src="screenshots/list-accordion-1.png" />
@@ -54,6 +63,15 @@ type State = {
  * import { ListAccordion, ListItem, Checkbox } from 'react-native-paper';
  *
  * const MyComponent = () => (
+*   state = {
+*     expanded: true
+*   }
+*
+*   _handlePress = () =>
+*     this.setState({
+*       expanded: !this.state.expanded
+*     });
+*
  *   <ListAccordion
  *     title="Accordion"
  *     icon="folder"
@@ -61,18 +79,35 @@ type State = {
  *     <ListItem title="First item" />
  *     <ListItem title="Second item" />
  *   </ListAccordion>
+ *   <ListAccordion
+ *      title="Accordion"
+ *      icon="folder"
+ *      expanded={this.state.expanded}
+ *      onPress={this._handlePress}
+ *   >
+ *     <ListItem title="First item" />
+ *     <ListItem title="Second item" />
+ *   </ListAccordion>
  * );
  * ```
  */
+
 class ListAccordion extends React.Component<Props, State> {
   state = {
-    expanded: false,
+    expanded: this.props.expanded || false,
   };
 
-  _handlePress = () =>
-    this.setState(state => ({
-      expanded: !state.expanded,
-    }));
+  _handlePress = () => {
+    this.props.onPress && this.props.onPress();
+
+    if (this.props.expanded === undefined) {
+      // Only update state of the `expanded` prop was not passed
+      // If it was passed, the component will act as a controlled component
+      this.setState(state => ({
+        expanded: !state.expanded,
+      }));
+    }
+  };
 
   render() {
     const { icon, title, description, children, theme, style } = this.props;
@@ -84,6 +119,10 @@ class ListAccordion extends React.Component<Props, State> {
       .alpha(0.54)
       .rgb()
       .string();
+
+    const expanded = this.props.expanded !== undefined
+        ? this.props.expanded
+        : this.state.expanded;
 
     return (
       <View>
@@ -103,11 +142,7 @@ class ListAccordion extends React.Component<Props, State> {
                 <Icon
                   name={icon}
                   size={24}
-                  color={
-                    this.state.expanded
-                      ? theme.colors.primary
-                      : descriptionColor
-                  }
+                  color={expanded ? theme.colors.primary : descriptionColor}
                 />
               </View>
             ) : null}
@@ -117,9 +152,7 @@ class ListAccordion extends React.Component<Props, State> {
                 style={[
                   styles.title,
                   {
-                    color: this.state.expanded
-                      ? theme.colors.primary
-                      : titleColor,
+                    color: expanded ? theme.colors.primary : titleColor,
                   },
                 ]}
               >
@@ -141,18 +174,14 @@ class ListAccordion extends React.Component<Props, State> {
             </View>
             <View style={[styles.item, description && styles.multiline]}>
               <Icon
-                name={
-                  this.state.expanded
-                    ? 'keyboard-arrow-up'
-                    : 'keyboard-arrow-down'
-                }
+                name={expanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
                 color={titleColor}
                 size={24}
               />
             </View>
           </View>
         </TouchableRipple>
-        {this.state.expanded
+        {expanded
           ? React.Children.map(children, child => {
               if (
                 icon &&
