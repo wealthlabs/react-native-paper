@@ -27,6 +27,7 @@ type Props = {
    * Whether the accordion is expanded
    * If this prop is provided, the accordion will behave as a "controlled component".
    * You'll need to update this prop when you want to toggle the component or on `onPress`.
+   * Implemented from original PR #638 merged in nov/18 https://github.com/callstack/react-native-paper/pull/638
    */
   expanded?: boolean,
   /**
